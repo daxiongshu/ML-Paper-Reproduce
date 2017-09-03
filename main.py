@@ -16,6 +16,8 @@ def main(FLAGS):
     print_args(FLAGS)
     if FLAGS.paper == "resnet":
         from papers.resnet.run import run_task
+    elif FLAGS.paper == "googlenet":
+        from papers.googlenet.run import run_task
     else:
         print("Unknown paper name %s"%FLAGS.paper)
         assert False
