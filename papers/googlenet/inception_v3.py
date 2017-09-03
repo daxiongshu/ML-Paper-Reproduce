@@ -24,13 +24,31 @@ class inception_v3(BaseCnnModel):
                 activations=['relu']*3, strides=[2,1,1], padding=["VALID","VALID","SAME"])
 
             net = self._max_pool2D(net, ksize = [1,3,3,1], strides = [1,2,2,1],
-                padding = 'SAME', layer_name = '%s/pool1'%net_name)
+                padding = 'VALID', layer_name = '%s/pool1'%net_name)
 
             net = self.conv_block(net,"%s/block2"%(net_name), ksizes=[1,3], filters=[80,192],
-                activations=['relu']*2, strides=[1,1], padding=["SAME","SAME"])
+                activations=['relu']*2, strides=[1,1], padding=["VALID","VALID"])
 
             net = self._max_pool2D(net, ksize = [1,3,3,1], strides = [1,2,2,1],
-                padding = 'SAME', layer_name = '%s/pool2'%net_name)
+                padding = 'VALID', layer_name = '%s/pool2'%net_name)
+
+            layer_name = "%s/inception0"%(net_name)
+            with tf.variable_scope(layer_name.split('/')[-1]):
+                net_1x1 = self.conv_block(net,"%s/1x1"%(layer_name), ksizes=[1], filters=[64],
+                    activations=['relu'], strides=[1], padding=["SAME"])
+
+                net_5x5 = self.conv_block(net,"%s/5x5"%(layer_name), ksizes=[1,5], filters=[48,64],
+                    activations=['relu']*2, strides=[1]*2, padding=["SAME"]*2)
+
+                net_3x3 = self.conv_block(net,"%s/3x3"%(layer_name), ksizes=[1,3,3], filters=[64,96,96],
+                    activations=['relu']*3, strides=[1]*3, padding=["SAME"]*3)
+
+                net = tf.nn.avg_pool(net, ksize=[1,3,3,1], strides=[1,1,1,1], padding='SAME')
+                net = self.conv_block(net,"%s/avg_1x1"%(layer_name), ksizes=[1], filters=[32],
+                    activations=['relu'], strides=[1], padding=["SAME"])
+
+                net = tf.concat([net_1x1, net_5x5, net_3x3, net],axis=3)
+         
 
             layer_name = "%s/inception1"%(net_name)
             with tf.variable_scope(layer_name.split('/')[-1]):
@@ -61,7 +79,7 @@ class inception_v3(BaseCnnModel):
                     activations=['relu']*3, strides=[1]*3, padding=["SAME"]*3)
 
                 net = tf.nn.avg_pool(net, ksize=[1,3,3,1], strides=[1,1,1,1], padding='SAME')
-                net = self.conv_block(net,"%s/avg_1x1"%(layer_name), ksizes=[1], filters=[32],
+                net = self.conv_block(net,"%s/avg_1x1"%(layer_name), ksizes=[1], filters=[64],
                     activations=['relu'], strides=[1], padding=["SAME"])
 
                 net = tf.concat([net_1x1, net_5x5, net_3x3, net],axis=3)
@@ -87,7 +105,7 @@ class inception_v3(BaseCnnModel):
                 net_7x7 = self.conv_block(net,"%s/7x7"%(layer_name), ksizes=[1,[1,7],[7,1]], filters=[128,128,192],
                     activations=['relu']*3, strides=[1]*3, padding=["SAME"]*3)
 
-                net_7x7_db = self.conv_block(net,"%s/7x7_db"%(layer_name), ksizes=[1,[7,1],[1,7],[7,1],[1,7]], filters=[192]*5,
+                net_7x7_db = self.conv_block(net,"%s/7x7_db"%(layer_name), ksizes=[1,[7,1],[1,7],[7,1],[1,7]], filters=[128]*4+[192],
                     activations=['relu']*5, strides=[1]*5, padding=["SAME"]*5)
 
                 net = tf.nn.avg_pool(net, ksize=[1,3,3,1], strides=[1,1,1,1], padding='SAME')
@@ -105,7 +123,7 @@ class inception_v3(BaseCnnModel):
                     net_7x7 = self.conv_block(net,"%s/7x7"%(layer_name), ksizes=[1,[1,7],[7,1]], filters=[160,160,192],
                         activations=['relu']*3, strides=[1]*3, padding=["SAME"]*3)
 
-                    net_7x7_db = self.conv_block(net,"%s/7x7_db"%(layer_name), ksizes=[1,[7,1],[1,7],[7,1],[1,7]], filters=[160]+[192]*4,
+                    net_7x7_db = self.conv_block(net,"%s/7x7_db"%(layer_name), ksizes=[1,[7,1],[1,7],[7,1],[1,7]], filters=[160]*4+[192],
                         activations=['relu']*5, strides=[1]*5, padding=["SAME"]*5)
 
                     net = tf.nn.avg_pool(net, ksize=[1,3,3,1], strides=[1,1,1,1], padding='SAME')
@@ -175,8 +193,12 @@ class inception_v3(BaseCnnModel):
 
                     net = tf.concat([net_1x1, net_3x3, net_3x3_db, net],axis=3) 
 
+            #print(net.get_shape().as_list())
+            h,w = net.get_shape().as_list()[1:3]
+            net  = tf.nn.avg_pool(net, ksize=[1,h,w,1], strides=[1,h,w,1], padding='VALID')
             with tf.name_scope("flatten"):
                 net = tf.contrib.layers.flatten(net)
+            #print(net.get_shape().as_list())
 
             net = self._fc(net, fan_in = net.get_shape().as_list()[1], fan_out=1000, layer_name='%s/fc'%net_name)
             self.logit = net

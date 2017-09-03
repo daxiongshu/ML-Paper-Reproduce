@@ -6,6 +6,7 @@ import keras
 
 
 def resnet50_name_map(name):
+    #keras layer name -> tf layer name
     tokens = re.findall('[0-9][a-g]', name)
     letters = {i:c+1 for c,i in enumerate('abcdefghijklmn')}
     if len(tokens)==2:

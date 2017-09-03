@@ -431,6 +431,9 @@ labels))
                 mean=0,stddev = sigma))
             print('{:>23} {:>23}'.format(wname, 'randomly initialize'))
         else:
+            if list(shape)!=list(self.weights[wname].shape):
+                print(wname,shape,self.weights[wname].shape)
+                assert 0#shape==self.weights[wname].shape
             w1 = tf.get_variable(name, shape = shape,
                 initializer=tf.constant_initializer(value=self.weights[wname],dtype=tf.float32))
             self.loaded_weights[wname]=1
@@ -447,6 +450,9 @@ labels))
             b1 = tf.get_variable(name,shape=shape,initializer=tf.constant_initializer(0.01))
             print('{:>23} {:>23}'.format(bname, 'randomly initialize'))
         else:
+            if list(shape)!=list(self.weights[bname].shape):
+                print(bname,shape,self.weights[bname].shape)
+                assert 0#shape==self.weights[wname].shape
             b1 = tf.get_variable(name,shape=shape,initializer=tf.constant_initializer(value=self.weights[bname],dtype=tf.float32))
             self.loaded_weights[bname]=1
             #print('{:>23} {:>23}'.format(wname, 'load from %s'%self.flags.load_path))
