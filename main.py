@@ -22,6 +22,8 @@ def main(_):
         from papers.googlenet.run import run_task
     elif FLAGS.paper == "densenet":
         from papers.densenet.run import run_task
+    elif FLAGS.paper == "vgg":
+        from papers.vgg.run import run_task
     else:
         print("Unknown paper name %s"%FLAGS.paper)
         assert False
