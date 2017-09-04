@@ -1,6 +1,6 @@
 rem Inference/test one image with pretrained model
-rem python main.py --paper densenet --task test_one_image --net densenet121 --input_path data\images\cat.jpg --load_path pretrain_weights\densenet121.npy
+python main.py --paper densenet --task test_one_image --net densenet121 --input_path data\images\cat.jpg --load_path pretrain_weights\densenet121.npy
 rem
-rem python main.py --paper densenet --task test_one_image --net densenet161 --input_path data\images\cat.jpg --load_path pretrain_weights\densenet161.npy
+python main.py --paper densenet --task test_one_image --net densenet161 --input_path data\images\cat.jpg --load_path pretrain_weights\densenet161.npy
 rem
-rem python main.py --paper densenet --task test_one_image --net densenet169 --input_path data\images\cat.jpg --load_path pretrain_weights\densenet169.npy
+python main.py --paper densenet --task test_one_image --net densenet169 --input_path data\images\cat.jpg --load_path pretrain_weights\densenet169.npy
