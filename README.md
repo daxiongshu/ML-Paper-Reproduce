@@ -1,4 +1,6 @@
-# Reproduction and modification of ML papers
+# Reproduction and modification of ML papers using tensorflow
+
+Tested version: tf-1.1
 
 List (code and weights ready):
 1. Image classification
