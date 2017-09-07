@@ -1,6 +1,6 @@
-# Reproduction and modification of ML papers using tensorflow
+# Reproduing ML papers using a unified tensorflow framework
 
-Tested version: tf-1.1
+Tested version: tf-1.1(cudnn5) tf-1.3(cudnn7)
 
 List (code and weights ready):
 1. Image classification
