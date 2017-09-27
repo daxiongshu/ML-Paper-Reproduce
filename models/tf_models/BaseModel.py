@@ -397,10 +397,10 @@ labels))
 
     def _leaky(self, x, alpha):
         with tf.name_scope("leaky_relu"):
-            m_x = tf.nn.relu(-x)
-            x = tf.nn.relu(x)
-            x -= alpha * m_x
-        return x
+            #m_x = tf.nn.relu(-x)
+            #x = tf.nn.relu(x)
+            #x -= alpha * m_x
+            return tf.maximum(x, alpha*x)
 
     def _getN(self, s,n):
         a = [s for i in range(n)]
