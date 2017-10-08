@@ -6,6 +6,16 @@ import os
 import sys
 import time
 import csv
+import math
+
+import tensorflow.contrib.slim as slim
+
+def show_all_variables():
+    model_vars = tf.trainable_variables()
+    slim.model_analyzer.analyze_vars(model_vars, print_info=True)
+
+def conv_out_size_same(size, stride):
+    return int(math.ceil(float(size) / float(stride)))
 
 def bbox_iou(box1,box2):
     """

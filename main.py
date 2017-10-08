@@ -24,6 +24,8 @@ def main(_):
         from papers.densenet.run import run_task
     elif FLAGS.paper == "vgg":
         from papers.vgg.run import run_task
+    elif FLAGS.paper == "dcgan":
+        from papers.dcgan.run import run_task
     else:
         print("Unknown paper name %s"%FLAGS.paper)
         assert False

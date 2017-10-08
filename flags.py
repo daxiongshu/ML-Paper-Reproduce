@@ -32,7 +32,7 @@ flags.DEFINE_float("lambdax",None,"lambda for L2 regularization")
 flags.DEFINE_float("epsilon",None,"epsilon in RL")
 flags.DEFINE_integer("color",3,"Color channels")
 flags.DEFINE_integer("epochs",None,"number of epochs")
-flags.DEFINE_integer("pre_epochs",None,"pretrained number of epochs")
+flags.DEFINE_integer("pre_epochs",0,"pretrained number of epochs")
 flags.DEFINE_string('paper', None, 'name of the paper')
 flags.DEFINE_string('task', None, 'train or test')
 flags.DEFINE_string('visualize',None,'visualize verbosity')
@@ -49,10 +49,19 @@ flags.DEFINE_integer("height",None,"height of image to resize to")
 flags.DEFINE_string('add_paths', None, 'additional input paths')
 flags.DEFINE_string('add_record_paths', None, 'additional records')
 flags.DEFINE_float("momentum",None,"momentum")
+flags.DEFINE_integer("verbosity",100,"verbosity")
 #####################################################################
 
 #####################################################################
-
+if flags.FLAGS.paper == 'dcgan':
+    flags.DEFINE_integer('out_height',None,'height for generator output')
+    flags.DEFINE_integer('out_width',None,'width for generator output')
+    flags.DEFINE_integer('gf_dim',64,'dim of 2nd last feamap in generator')
+    flags.DEFINE_integer('df_dim',64,'dim of ')
+    flags.DEFINE_integer('z_dim',100,'dim of z input vector')
+    flags.DEFINE_integer('crop',1,'')
+    flags.DEFINE_integer('g_num_update',2,'iter of g updates')
+    flags.DEFINE_integer('d_num_update',1,'iter of d updates')
 #####################################################################
 
 FLAGS = flags.FLAGS

@@ -107,7 +107,7 @@ labels))
         # This function could be overwritten
         if not self.flags.visualize or self.flags.visualize=='none':
             return
-        summ_collection = "{} {} {} summaries".format(self.flags.comp, self.flags.sol, self.flags.run_name)
+        summ_collection = "{} {} {} summaries".format(self.flags.paper, self.flags.task, self.flags.run_name)
         if len(tf.get_collection(tf.GraphKeys.SCALARS)):
             self.scaler_op = tf.summary.merge(tf.get_collection(tf.GraphKeys.SCALARS))
         if len(tf.get_collection(tf.GraphKeys.IMAGES)):
@@ -149,7 +149,7 @@ labels))
         for var, val in zip(tvars, tvars_vals):
             weights[var.name] = val
 
-        name = "%s/%s_%s_%s_%d.npy"%(self.flags.save_path, self.flags.comp, self.flags.run_name, self.flags.net, self.flags.pre_epochs + int(self.epoch))
+        name = "%s/%s_%s_%s_%d.npy"%(self.flags.save_path, self.flags.paper, self.flags.run_name, self.flags.net, self.flags.pre_epochs + int(self.epoch))
         np.save(name, weights)
 
     def print_all_variables(self):
@@ -319,26 +319,31 @@ labels))
         b1 = self._get_variable(layer_name, name='bias', shape=[fan_out])
         return w1,b1
 
-    def _batch_normalization(self, x, layer_name, eps=0.001):
+    def _batch_normalization(self, x, layer_name, eps=0.001, training=False, momentum=0.99):
         with tf.variable_scope(layer_name.split('/')[-1]):
             beta, gamma, mean, variance = self._get_batch_normalization_weights(layer_name)
             # beta, gamma, mean, variance are numpy arrays!!!
 
             if beta is None:
-                try:
-                    net = tf.layers.batch_normalization(x, epsilon = eps)
-                except:
-                    net = tf.nn.batch_normalization(x, 0, 1, 0, 1, 0.01)
+                #try:
+                if True:
+                    net = tf.layers.batch_normalization(x, epsilon = eps,training=training,
+                        momentum = momentum)
+
+                #except:
+                #    net = tf.nn.batch_normalization(x, 0, 1, 0, 1, 0.01)
             else:
-                try:
-                    net = tf.layers.batch_normalization(x, epsilon = eps,        
+                #try:
+                if True:
+                    net = tf.layers.batch_normalization(x, epsilon = eps, training = training,      
+                        momentum = momentum,
                         beta_initializer = tf.constant_initializer(value=beta,dtype=tf.float32),
                         gamma_initializer = tf.constant_initializer(value=gamma,dtype=tf.float32),
                         moving_mean_initializer = tf.constant_initializer(value=mean,dtype=tf.float32),
                         moving_variance_initializer = tf.constant_initializer(value=variance,dtype=tf.float32), 
                     )
-                except:
-                    net = tf.nn.batch_normalization(x, mean, variance, beta, gamma, 0.01)
+                #except:
+                #    net = tf.nn.batch_normalization(x, mean, variance, beta, gamma, 0.01)
         mean = '%s/batch_normalization/moving_mean:0'%(layer_name)
         variance = '%s/batch_normalization/moving_variance:0'%(layer_name)
         try:
@@ -348,11 +353,11 @@ labels))
             pass
         return net
 
-    def _get_batch_normalization_weights(self,layer_name):
-        beta = '%s/batch_normalization/beta:0'%(layer_name)
-        gamma = '%s/batch_normalization/gamma:0'%(layer_name)
-        mean = '%s/batch_normalization/moving_mean:0'%(layer_name)
-        variance = '%s/batch_normalization/moving_variance:0'%(layer_name)
+    def _get_batch_normalization_weights(self,layer_name,name='batch_normalization'):
+        beta = '%s/%s/beta:0'%(layer_name,name)
+        gamma = '%s/%s/gamma:0'%(layer_name,name)
+        mean = '%s/%s/moving_mean:0'%(layer_name,name)
+        variance = '%s/%s/moving_variance:0'%(layer_name,name)
         if self.weights is None or beta not in self.weights:
             print('{:>23} {:>23}'.format(beta, 'using default initializer'))
             return None, None, None, None
@@ -381,11 +386,12 @@ labels))
         Hy,Wy,Cy = y.get_shape().as_list()[1:]
 
 
-    def _activate(self, net, activation):
+    def _activate(self, net, activation,args={}):
         if activation=="relu":
             net = tf.nn.relu(net)
         elif activation == 'leaky':
-            net = self._leaky(net, alpha = 0.1)
+            alpha = args.get('alpha',0.1)
+            net = self._leaky(net, alpha = alpha)
         elif activation == "sigmoid":
             net = tf.nn.sigmoid(net)
         elif activation == "softmax":
@@ -395,7 +401,7 @@ labels))
         return net
 
 
-    def _leaky(self, x, alpha):
+    def _leaky(self, x, alpha=0.2):
         with tf.name_scope("leaky_relu"):
             #m_x = tf.nn.relu(-x)
             #x = tf.nn.relu(x)

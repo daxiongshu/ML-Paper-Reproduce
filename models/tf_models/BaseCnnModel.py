@@ -67,19 +67,36 @@ class BaseCnnModel(BaseModel):
                 tf.summary.histogram(name='W', values=w, collections=[tf.GraphKeys.WEIGHTS])
         return net
 
+    def _deconv2D(self, x, ksize, in_channel, out_shape, strides, layer_name, padding='SAME', activation=None
+, L2 = 1, use_bias=True):
+        show_weight = self.flags.visualize and 'weight' in self.flags.visualize
+        out_channel = out_shape[-1]
+        with tf.variable_scope(layer_name.split('/')[-1]):
+            w,b = self._get_conv_weights(ksize,in_channel,out_channel,layer_name, 
+                use_bias=use_bias, deconv=True)
+            net = tf.nn.conv2d_transpose(x,w,out_shape,strides=strides,padding=padding)
+            if use_bias:
+                net = tf.nn.bias_add(net, b)
+
+            net = self._activate(net, activation)
+            if show_weight:
+                tf.summary.histogram(name='W', values=w, collections=[tf.GraphKeys.WEIGHTS])
+        return net
 
     def _max_pool2D(self, x, ksize, strides, padding, layer_name):
         with tf.name_scope(layer_name.split('/')[-1]):
             net = tf.nn.max_pool(x,ksize = ksize, strides = strides, padding = padding)
         return net
 
-    def _get_conv_weights(self, ksize,in_channel,out_channel,layer_name, use_bias=True):
+    def _get_conv_weights(self, ksize,in_channel,out_channel,layer_name, use_bias=True,deconv=False):
         if isinstance(ksize,list):
             kx,ky = ksize
         else:
             kx,ky = ksize,ksize
-
-        w1 = self._get_variable(layer_name, name='weights', shape=[kx,ky,in_channel,out_channel])
+        if deconv:
+            w1 = self._get_variable(layer_name, name='weights', shape=[kx,ky,out_channel,in_channel])
+        else:
+            w1 = self._get_variable(layer_name, name='weights', shape=[kx,ky,in_channel,out_channel])
         b1 = None
         if use_bias:
             b1 = self._get_variable(layer_name, name='bias', shape=[out_channel])
@@ -92,7 +109,9 @@ class BaseCnnModel(BaseModel):
                 self.imagenet_names[c] = line.strip()
 
 
-    def conv_block(self, net, name, ksizes, filters, activations, strides, batchnorm=None, padding=None):
+    def conv_block(self, net, name, ksizes, filters, activations, strides, 
+        batchnorm=None, padding=None, args={}):
+
         assert len(filters) == len(ksizes)
         assert len(filters) == len(strides)
         assert len(filters) == len(activations)
@@ -117,12 +136,53 @@ class BaseCnnModel(BaseModel):
                     activation = None)
 
                 if batchnorm[i]:
-                    net = self._batch_normalization(net, layer_name='%s/batch_norm%d'%(name,idx))
+                    eps = args.get('eps',1e-3)
+                    training = args.get('training',True)
+                    momentum = args.get('momentum',0.99)
+                    net = self._batch_normalization(net, layer_name='%s/batch_norm%d'%(name,idx),
+                        eps=eps, training=training, momentum=momentum)
                 
-                net = self._activate(net, activations[i])
+                net = self._activate(net, activations[i],args)
 
         return net
 
+    def deconv_block(self, net, name, ksizes, outshapes, 
+        activations, strides, batchnorm=None, padding=None,args={}):
+        filters = outshapes
+        assert len(filters) == len(ksizes)
+        assert len(filters) == len(strides)
+        assert len(filters) == len(activations)
+        assert len(filters) == len(outshapes)
+
+        if batchnorm is None:
+            batchnorm = [1 for i in filters]
+
+        if padding is None:
+            padding = ["SAME" for i in filters]
+
+        if isinstance(padding,list)==False:
+            padding = [padding for i in filters]
+
+        if isinstance(strides[0],list) == False:
+            strides = [[i,i] for i in strides]
+
+        with tf.variable_scope(name.split('/')[-1]):
+            for i in range(len(filters)):
+                net = self._deconv2D(net, ksize=ksizes[i], in_channel=net.get_shape().as_list()[-1],
+                    out_shape=outshapes[i], strides=[1,strides[i][0],strides[i][1],1], 
+                    layer_name='%s/deconv%d'%(name,i), padding=padding[i],
+                    activation = None)
+
+                if batchnorm[i]:
+                    eps = args.get('eps',1e-3)
+                    training = args.get('training',True)
+                    momentum = args.get('momentum',0.99)
+                    net = self._batch_normalization(net, layer_name='%s/batch_norm%d'%(name,i),
+                        eps=eps, training=training,momentum=momentum)
+
+                net = self._activate(net, activations[i], args)
+
+        return net
 
     def inference_one_image(self, imgname):
         img = Image.open(imgname).resize((224,224))
