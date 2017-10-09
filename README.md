@@ -10,6 +10,7 @@ List (code and weights ready):
     4. vgg16
 2. GAN
     1. DCGAN
+    
 Coming
 >1. WGAN
 
