@@ -8,8 +8,9 @@ List (code and weights ready):
     2. googlenet inception v3
     3. resnet50
     4. vgg16
-
+2. GAN
+    1. DCGAN
 Coming
->1. GAN
+>1. WGAN
 
 Instructions and requirements can be found in papers/paper_xxx/run.bat If not, the paper is not ready yet.

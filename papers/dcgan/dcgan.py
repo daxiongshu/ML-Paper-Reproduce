@@ -150,6 +150,22 @@ class DCGAN(GAN):
                     tf.summary.histogram(var.name + '/gradient',
                         grad, collections=[tf.GraphKeys.GRADIENTS])
 
+    def gen(self):
+        self._build()
+        data_path = self.flags.data_path
+        load_name = self.flags.load_path.split('/')[-1].split('.')[0]
+        B = self.flags.batch_size
+        sample_z = np.random.uniform(-1, 1, [B, self.flags.z_dim]) \
+            .astype(np.float32)
+        with tf.Session() as sess:
+            self.sess = sess
+            sess.run(tf.global_variables_initializer())
+            sess.run(tf.local_variables_initializer())
+            self._restore()
+            samples = sess.run(self.Sample,feed_dict={self.z:sample_z})
+            save_images(samples, image_manifold_size(samples.shape[0]),
+                '{}/gen_{}.png'.format(data_path,load_name))
+
     def train(self):
 
         self._build()
@@ -201,11 +217,10 @@ class DCGAN(GAN):
                     print("Epochs: %d batches: %d D Loss: %.4f G Loss: %.4f Time: %.3f s"%(
                         self.epoch, count,
                         ave_d_loss, ave_g_loss, duration))
-                if count%100 == 0:
+                if epoch>self.epoch:
                     samples = sess.run(self.Sample,feed_dict={self.z:sample_z})
                     save_images(samples, image_manifold_size(samples.shape[0]),
                         '{}/train_{:02d}_{:04d}.png'.format(data_path, self.flags.pre_epochs+epoch, count))
-                if epoch>self.epoch:
                     self.epoch = epoch
                     self._save()
             self.epoch = self.flags.epochs
