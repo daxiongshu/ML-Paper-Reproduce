@@ -137,7 +137,7 @@ class BaseCnnModel(BaseModel):
 
                 if batchnorm[i]:
                     eps = args.get('eps',1e-3)
-                    training = args.get('training',True)
+                    training = args.get('training',False)
                     momentum = args.get('momentum',0.99)
                     net = self._batch_normalization(net, layer_name='%s/batch_norm%d'%(name,idx),
                         eps=eps, training=training, momentum=momentum)

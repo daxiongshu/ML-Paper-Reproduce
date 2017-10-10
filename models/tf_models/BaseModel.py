@@ -325,25 +325,16 @@ labels))
             # beta, gamma, mean, variance are numpy arrays!!!
 
             if beta is None:
-                #try:
-                if True:
-                    net = tf.layers.batch_normalization(x, epsilon = eps,training=training,
-                        momentum = momentum)
-
-                #except:
-                #    net = tf.nn.batch_normalization(x, 0, 1, 0, 1, 0.01)
+                net = tf.layers.batch_normalization(x, epsilon = eps,training=training,
+                    momentum = momentum)
             else:
-                #try:
-                if True:
-                    net = tf.layers.batch_normalization(x, epsilon = eps, training = training,      
-                        momentum = momentum,
-                        beta_initializer = tf.constant_initializer(value=beta,dtype=tf.float32),
-                        gamma_initializer = tf.constant_initializer(value=gamma,dtype=tf.float32),
-                        moving_mean_initializer = tf.constant_initializer(value=mean,dtype=tf.float32),
-                        moving_variance_initializer = tf.constant_initializer(value=variance,dtype=tf.float32), 
+                net = tf.layers.batch_normalization(x, epsilon = eps, training = training,      
+                    momentum = momentum,
+                    beta_initializer = tf.constant_initializer(value=beta,dtype=tf.float32),
+                    gamma_initializer = tf.constant_initializer(value=gamma,dtype=tf.float32),
+                    moving_mean_initializer = tf.constant_initializer(value=mean,dtype=tf.float32),
+                    moving_variance_initializer = tf.constant_initializer(value=variance,dtype=tf.float32), 
                     )
-                #except:
-                #    net = tf.nn.batch_normalization(x, mean, variance, beta, gamma, 0.01)
         mean = '%s/batch_normalization/moving_mean:0'%(layer_name)
         variance = '%s/batch_normalization/moving_variance:0'%(layer_name)
         try:
